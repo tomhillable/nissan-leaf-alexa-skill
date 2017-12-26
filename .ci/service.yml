@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Deploys the nissan-leaf-alexa-skill
+Parameters:
+  Name:
+    Type: String
+    Default: nissan-leaf-alexa-skill
+Resources:
+  Function:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: main.handler
+      Runtime: python3.6
+      CodeUri: ../dist
+      Timeout: 10
+      Role: !<!GetAtt> FunctionExecutionRole.Arn
+  FunctionExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Path: !<!Sub> '/${ Name }/'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: Logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+  FunctionLogGroup:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      LogGroupName: !<!Sub> '/aws/lambda/${ Function}'
+      RetentionInDays: 3

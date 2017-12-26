@@ -1,0 +1,9 @@
+FROM amazonlinux:2017.03.1.20170812
+
+ENV PATH=/env/bin:$PATH
+
+ADD . /service
+
+RUN yum -y install git python36 python36-devel gcc && pip-3.6 install -r /service/requirements.txt
+
+WORKDIR /service

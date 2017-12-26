@@ -1,0 +1,17 @@
+version: '2'
+
+services:
+  src:
+    build:
+      context: .
+      dockerfile: Dockerfile.development
+    entrypoint: python
+    volumes:
+      - .:/service
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.development
+    entrypoint: python36 -m unittest discover tests/
+    volumes:
+      - .:/service

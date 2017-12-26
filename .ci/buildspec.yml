@@ -1,0 +1,32 @@
+version: 0.1
+
+phases:
+  install:
+    commands:
+      - yum -y install git python36 python36-devel gcc aws-cli
+
+  pre_build:
+    commands:
+      - mkdir dist artifacts
+
+  build:
+    commands:
+      - pip-3.6 install -r requirements.txt -t dist
+      - PYTHONPATH=dist python36 -m unittest discover tests
+      - cp -r main.py src dist/
+      # - chmod -R a+rwX dist
+      - "aws cloudformation package --template-file .ci/service.yml --s3-prefix build --s3-bucket $S3_BUCKET --output-template-file artifacts/template.yml"
+
+
+  post_build:
+    commands:
+      - echo "Listing artifacts..."
+      - "ls -lR artifacts/"
+      - echo "Listing dist..."
+      - "ls -lR dist/"
+
+artifacts:
+  type: zip
+  discard-paths: yes
+  files:
+    - artifacts/**/*
