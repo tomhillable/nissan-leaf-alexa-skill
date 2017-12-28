@@ -1,23 +1,71 @@
 AWSTemplateFormatVersion: '2010-09-09'
+
 Transform: 'AWS::Serverless-2016-10-31'
+
 Description: Deploys the nissan-leaf-alexa-skill
+
 Parameters:
+
   Name:
     Type: String
     Default: nissan-leaf-alexa-skill
+  
+  NissanUsername:
+    Default: /Secrets/Nissan/Username
+    Description: The nissan carwings username
+    Type: AWS::SSM::Parameter::Value<String>
+    NoEcho: true
+  
+  NissanPassword:
+    Default: /Secrets/Nissan/Password
+    Description: The nissan carwings password
+    Type: AWS::SSM::Parameter::Value<String>
+    NoEcho: true
+
 Resources:
-  Function:
+
+  RequestUpdateFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Handler: main.handler
+      Handler: handlers.request_update
       Runtime: python3.6
       CodeUri: ../dist
-      Timeout: 10
-      Role: !<!GetAtt> FunctionExecutionRole.Arn
+      Timeout: 20
+      Role: !GetAtt FunctionExecutionRole.Arn
+      Environment:
+        Variables:
+          CARWINGS_USERNAME: !Ref NissanUsername
+          CARWINGS_PASSWORD: !Ref NissanPassword
+      
+  RequestUpdateFunctionLogGroup:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${RequestUpdateFunction}'
+      RetentionInDays: 3
+
+  RequestUpdateStatusFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handlers.request_update_status
+      Runtime: python3.6
+      CodeUri: ../dist
+      Timeout: 20
+      Role: !GetAtt FunctionExecutionRole.Arn
+      Environment:
+        Variables:
+          CARWINGS_USERNAME: !Ref NissanUsername
+          CARWINGS_PASSWORD: !Ref NissanPassword
+      
+  RequestUpdateStatusFunctionLogGroup:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${RequestUpdateStatusFunction}'
+      RetentionInDays: 3
+
   FunctionExecutionRole:
     Type: 'AWS::IAM::Role'
     Properties:
-      Path: !<!Sub> '/${ Name }/'
+      Path: !Sub '/${Name}/'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -36,8 +84,4 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                 Resource: '*'
-  FunctionLogGroup:
-    Type: 'AWS::Logs::LogGroup'
-    Properties:
-      LogGroupName: !<!Sub> '/aws/lambda/${ Function}'
-      RetentionInDays: 3
+

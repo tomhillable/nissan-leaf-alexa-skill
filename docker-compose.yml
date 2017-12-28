@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.development
-    entrypoint: python
+    entrypoint: python36
     volumes:
       - .:/service
   tests:
