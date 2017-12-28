@@ -24,6 +24,89 @@ Parameters:
 
 Resources:
 
+  StateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      RoleArn: !GetAtt StatesExecutionRole.Arn
+      DefinitionString: !Sub |
+        {
+          "Comment": "Get Leaf battery status from Nissan",
+          "StartAt": "RequestUpdate",
+          "States": {
+
+            "RequestUpdate": {
+              "Type": "Task",
+              "Resource": "${RequestUpdateFunction.Arn}",
+              "Next": "RequestUpdateStatus"
+            },
+
+            "RequestUpdateStatus": {
+              "Type": "Task",
+              "Resource": "${RequestUpdateStatusFunction.Arn}",
+              "Next": "IsUpdateAvailable",
+              "ResultPath": "$.RequestUpdateStatus"
+            },
+
+            "WaitForUpdate": {
+              "Type": "Wait",
+              "Seconds": 5,
+              "Next": "RequestUpdateStatus"
+            },
+
+            "IsUpdateAvailable": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.RequestUpdateStatus.updateAvailable",
+                  "BooleanEquals": true,
+                  "Next": "SuccessState"
+                },
+                {
+                  "Variable": "$.RequestUpdateStatus.updateAvailable",
+                  "BooleanEquals": false,
+                  "Next": "WaitForUpdate"
+                }
+              ],
+              "Default": "FailState"
+            },
+            
+            "FailState": {
+              "Type": "Fail",
+              "Cause": "Invalid response.",
+              "Error": "Invalid response from RequestUpdateStatus"
+            },
+            
+            "SuccessState": {
+              "Type": "Succeed"
+            }
+          }
+        }
+
+  StatesExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: !Sub "/${Name}/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - !Sub "states.${AWS::Region}.${AWS::URLSuffix}"
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: StatesExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt RequestUpdateFunction.Arn
+                  - !GetAtt RequestUpdateStatusFunction.Arn
+
   RequestUpdateFunction:
     Type: 'AWS::Serverless::Function'
     Properties:

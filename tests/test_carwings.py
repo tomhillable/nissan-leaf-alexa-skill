@@ -35,7 +35,7 @@ class RequestUpdateTestCase(unittest.TestCase):
         schema = {
             "type": "object",
             "properties": {
-                "updateAvailable": {"type": "boolean"}
+                "updateAvailable": {"type": "boolean"},
             },
             "required": ["updateAvailable"]
         }
