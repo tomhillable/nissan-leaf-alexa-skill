@@ -24,7 +24,7 @@ phases:
       - echo "Listing artifacts..."
       - "ls -lR artifacts/"
       - echo "Listing dist..."
-      - "ls -lR dist/"
+      - "ls -l dist/"
 
 artifacts:
   type: zip

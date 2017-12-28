@@ -1,12 +1,19 @@
+import logging
 import os
 import sys
 from src.carwings import CarwingsStatus
+from src.intents import GetChargeStatus
 
+logging.basicConfig(level=logging.DEBUG)
 CW = CarwingsStatus(
-    username = os.environ['CARWINGS_USERNAME'],
-    password = os.environ['CARWINGS_PASSWORD']
+    username = os.environ.get('CARWINGS_USERNAME'),
+    password = os.environ.get('CARWINGS_PASSWORD')
 )
 
+def alexa(event, context):
+    logging.debug(event)
+    return GetChargeStatus(event).process()
+    
 def request_update(event, context):
     return CW.request_update()
 

@@ -82,30 +82,6 @@ Resources:
           }
         }
 
-  StatesExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Path: !Sub "/${Name}/"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Principal:
-              Service:
-                - !Sub "states.${AWS::Region}.${AWS::URLSuffix}"
-            Action: "sts:AssumeRole"
-      Path: "/"
-      Policies:
-        - PolicyName: StatesExecutionPolicy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource:
-                  - !GetAtt RequestUpdateFunction.Arn
-                  - !GetAtt RequestUpdateStatusFunction.Arn
 
   RequestUpdateFunction:
     Type: 'AWS::Serverless::Function'
@@ -145,6 +121,28 @@ Resources:
       LogGroupName: !Sub '/aws/lambda/${RequestUpdateStatusFunction}'
       RetentionInDays: 3
 
+  AlexaSkillFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handlers.alexa
+      Runtime: python3.6
+      CodeUri: ../dist
+      Timeout: 20
+      Role: !GetAtt FunctionExecutionRole.Arn
+      
+  AlexaSkillFunctionLogGroup:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AlexaSkillFunction}'
+      RetentionInDays: 3
+      
+  AlexaSkillFunctioPermissions: 
+    Type: "AWS::Lambda::Permission"
+    Properties: 
+      FunctionName: !Ref AlexaSkillFunction
+      Action: lambda:InvokeFunction
+      Principal: alexa-appkit.amazon.com
+
   FunctionExecutionRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -168,3 +166,27 @@ Resources:
                   - 'logs:PutLogEvents'
                 Resource: '*'
 
+  StatesExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: !Sub "/${Name}/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - !Sub "states.${AWS::Region}.${AWS::URLSuffix}"
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: StatesExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt RequestUpdateFunction.Arn
+                  - !GetAtt RequestUpdateStatusFunction.Arn
