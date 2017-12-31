@@ -1,6 +1,7 @@
 import jsonschema
 from pycarwings2.responses import CarwingsBatteryStatusResponse, CarwingsLoginResponse
 from pycarwings2.pycarwings2 import CarwingsError, Leaf
+from datetime import date
 import src.carwings
 import unittest
 from unittest.mock import MagicMock
@@ -12,6 +13,10 @@ class RequestUpdateTestCase(unittest.TestCase):
         self.cw.session.connect = MagicMock(return_value=CarwingsLoginResponse(APP_RESP))
         self.leaf = Leaf(self.cw.session, CarwingsLoginResponse(APP_RESP).leafs[0])
         self.leaf.request_update = MagicMock(return_value='AAAAAAAAAAAA')
+        self.leaf.get_driving_analysis = MagicMock(return_value={'a': 1})
+        self.leaf.get_latest_battery_status = MagicMock(return_value={'b': 1})
+        self.leaf.get_electric_rate_simulation = MagicMock(return_value={'c': 1})
+        self.leaf.get_climate_control_schedule = MagicMock(return_value=None)
         self.cw.session.get_leaf = MagicMock(return_value=self.leaf)
 
     def test_login(self):
@@ -50,7 +55,16 @@ class RequestUpdateTestCase(unittest.TestCase):
         self.assertIsNone(jsonschema.validate(response, schema))
         self.assertTrue(response.get('updateAvailable'))
         self.leaf.get_status_from_update.assert_called_with('foo')
-
+    
+    def test_collate_data(self):
+        expected = { 'a': 1, 'b': 1, 'c': 1 }
+        self.assertEqual(expected, self.cw._collate_data())
+        
+        self.leaf.get_driving_analysis.assert_called_once()
+        self.leaf.get_latest_battery_status.assert_called_once()
+        month = date.today().strftime('%Y%m')
+        self.leaf.get_electric_rate_simulation.assert_called_once_with(month)
+        self.leaf.get_climate_control_schedule.assert_called_once()
 
 APP_RESP = {
     "status": 200,

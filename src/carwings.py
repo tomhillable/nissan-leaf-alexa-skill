@@ -1,6 +1,7 @@
 import pycarwings2
 import sys
 
+from datetime import date
 from pycarwings2.responses import CarwingsBatteryStatusResponse
 
 
@@ -28,7 +29,24 @@ class CarwingsStatus:
         l = self.session.get_leaf()
         ret = isinstance(l.get_status_from_update(rk),
                          CarwingsBatteryStatusResponse)
-        return {'updateAvailable': ret}
+        result = {'updateAvailable': ret}
+        if ret:
+            result.update(self._collate_data())
+        return result
+        
+    def _collate_data(self):
+        dicts = []
+        res = {}
+        l = self.session.get_leaf()
+        month = date.today().strftime('%Y%m')
+        dicts.append(l.get_driving_analysis())
+        dicts.append(l.get_latest_battery_status())
+        dicts.append(l.get_electric_rate_simulation(month))
+        dicts.append(l.get_climate_control_schedule())
+        for d in dicts:
+            if d:
+                res.update(d)
+        return res
 
 
 class CarwingsLoginException(Exception):
