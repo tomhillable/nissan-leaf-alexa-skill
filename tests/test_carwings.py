@@ -20,7 +20,8 @@ class RequestUpdateTestCase(unittest.TestCase):
         self.cw.session.get_leaf = MagicMock(return_value=self.leaf)
 
     def test_login(self):
-        self.assertIsInstance(self.cw._login(), CarwingsLoginResponse)
+        with self.assertLogs() as c:
+            self.assertIsInstance(self.cw._login(), CarwingsLoginResponse)
         self.cw.session.connect = MagicMock(side_effect=CarwingsError('Boom!'))
         self.assertRaises(src.carwings.CarwingsLoginException, self.cw._login)
 
@@ -32,7 +33,8 @@ class RequestUpdateTestCase(unittest.TestCase):
             },
             "required": ["resultKey"]
         }
-        response = self.cw.request_update()
+        with self.assertLogs() as c:
+            response = self.cw.request_update()
         self.assertIsNone(jsonschema.validate(response, schema))
 
     def test_is_update_available(self):
@@ -45,7 +47,8 @@ class RequestUpdateTestCase(unittest.TestCase):
             "required": ["updateAvailable"]
         }
         self.leaf.get_status_from_update = MagicMock(return_value=None)
-        response = self.cw.is_update_available(event)
+        with self.assertLogs() as c:
+            response = self.cw.is_update_available(event)
         self.assertIsNone(jsonschema.validate(response, schema))
         self.assertFalse(response.get('updateAvailable'))
 
@@ -58,7 +61,8 @@ class RequestUpdateTestCase(unittest.TestCase):
     
     def test_collate_data(self):
         expected = { 'a': 1, 'b': 1, 'c': 1 }
-        self.assertEqual(expected, self.cw._collate_data())
+        with self.assertLogs() as c:
+            self.assertEqual(expected, self.cw._collate_data())
         
         self.leaf.get_driving_analysis.assert_called_once()
         self.leaf.get_latest_battery_status.assert_called_once()
