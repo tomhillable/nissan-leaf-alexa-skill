@@ -4,7 +4,7 @@ from pycarwings2.pycarwings2 import CarwingsError, Leaf
 from datetime import date
 import src.carwings
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 
 class RequestUpdateTestCase(unittest.TestCase):
@@ -13,9 +13,9 @@ class RequestUpdateTestCase(unittest.TestCase):
         self.cw.session.connect = MagicMock(return_value=CarwingsLoginResponse(APP_RESP))
         self.leaf = Leaf(self.cw.session, CarwingsLoginResponse(APP_RESP).leafs[0])
         self.leaf.request_update = MagicMock(return_value='AAAAAAAAAAAA')
-        self.leaf.get_driving_analysis = MagicMock(return_value={'a': 1})
-        self.leaf.get_latest_battery_status = MagicMock(return_value={'b': 1})
-        self.leaf.get_electric_rate_simulation = MagicMock(return_value={'c': 1})
+        self.leaf.get_driving_analysis = MagicMock(return_value=FakeResponse(a=1))
+        self.leaf.get_latest_battery_status = MagicMock(return_value=FakeResponse(b=1))
+        self.leaf.get_electric_rate_simulation = MagicMock(return_value=FakeResponse(c=1))
         self.leaf.get_climate_control_schedule = MagicMock(return_value=None)
         self.cw.session.get_leaf = MagicMock(return_value=self.leaf)
 
@@ -69,6 +69,15 @@ class RequestUpdateTestCase(unittest.TestCase):
         month = date.today().strftime('%Y%m')
         self.leaf.get_electric_rate_simulation.assert_called_once_with(month)
         self.leaf.get_climate_control_schedule.assert_called_once()
+
+class FakeResponse:
+    def __init__(self, a=None, b=None, c=None):
+        if a:
+            self.a = a
+        if b:
+            self.b = b
+        if c:
+            self.c = c
 
 APP_RESP = {
     "status": 200,

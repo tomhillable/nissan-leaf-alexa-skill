@@ -59,7 +59,7 @@ class CarwingsStatus:
         dicts.append(self.leaf().get_climate_control_schedule())
         for d in dicts:
             if d:
-                res.update(d)
+                res.update(d.__dict__)
         self.log.info('Collected data:')
         self.log.info(res)
         return res
