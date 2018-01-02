@@ -1,7 +1,7 @@
 import jsonschema
 from pycarwings2.responses import CarwingsBatteryStatusResponse, CarwingsLoginResponse
 from pycarwings2.pycarwings2 import CarwingsError, Leaf
-from datetime import date
+from datetime import date, timedelta
 import src.carwings
 import unittest
 from unittest.mock import MagicMock, Mock
@@ -13,7 +13,7 @@ class RequestUpdateTestCase(unittest.TestCase):
         self.cw.session.connect = MagicMock(return_value=CarwingsLoginResponse(APP_RESP))
         self.leaf = Leaf(self.cw.session, CarwingsLoginResponse(APP_RESP).leafs[0])
         self.leaf.request_update = MagicMock(return_value='AAAAAAAAAAAA')
-        self.leaf.get_driving_analysis = MagicMock(return_value=FakeResponse(a=1))
+        self.leaf.get_driving_analysis = MagicMock(return_value=FakeResponse(a=timedelta(0, 1)))
         self.leaf.get_latest_battery_status = MagicMock(return_value=FakeResponse(b=1))
         self.leaf.get_electric_rate_simulation = MagicMock(return_value=FakeResponse(c=1))
         self.leaf.get_climate_control_schedule = MagicMock(return_value=None)

@@ -1,3 +1,4 @@
+import datetime
 import logging
 import pycarwings2
 import sys
@@ -60,6 +61,9 @@ class CarwingsStatus:
         for d in dicts:
             if d:
                 res.update(d.__dict__)
+        for key, value in res.items():
+            if isinstance(value, datetime.timedelta):
+                res[key] = value.total_seconds()
         self.log.info('Collected data:')
         self.log.info(res)
         return res
